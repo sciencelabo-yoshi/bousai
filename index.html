@@ -1,0 +1,71 @@
+function initMap() {
+  if (map) {
+    map.invalidateSize();
+    return;
+  }
+
+  map = L.map("mapBox").setView([34.6851, 135.8048], 15);
+
+  const standardMap = L.tileLayer(
+    "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+      attribution: "地図：国土地理院"
+    }
+  ).addTo(map);
+
+  const paleMap = L.tileLayer(
+    "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+      attribution: "地図：国土地理院"
+    }
+  );
+
+  const landslideMap = L.tileLayer(
+    "https://www.j-shis.bosai.go.jp/map/xyz/landslide/{z}/{x}/{y}.png",
+    {
+      minZoom: 5,
+      maxZoom: 15,
+      opacity: 0.65,
+      attribution: "地すべり地形分布図：J-SHIS"
+    }
+  );
+
+  const evacuationEarthquake = L.tileLayer(
+    "https://cyberjapandata.gsi.go.jp/xyz/skhb04/{z}/{x}/{y}.geojson",
+    {
+      maxZoom: 18,
+      attribution: "指定緊急避難場所：国土地理院"
+    }
+  );
+
+  const baseMaps = {
+    "標準地図": standardMap,
+    "淡色地図": paleMap
+  };
+
+  const overlayMaps = {
+    "地すべり地形": landslideMap
+  };
+
+  L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+  map.on("click", function(e) {
+    pinLat = e.latlng.lat;
+    pinLng = e.latlng.lng;
+
+    if (marker) {
+      marker.setLatLng(e.latlng);
+    } else {
+      marker = L.marker(e.latlng).addTo(map);
+    }
+
+    document.getElementById("pinText").textContent =
+      "現在地ピン：緯度 " + pinLat.toFixed(6) + "、経度 " + pinLng.toFixed(6);
+  });
+
+  setTimeout(function() {
+    map.invalidateSize();
+  }, 500);
+}
