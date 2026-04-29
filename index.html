@@ -127,6 +127,12 @@ textarea {
   min-height: 90px;
 }
 
+#promptOutput {
+  min-height: 360px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 button {
   width: 100%;
   border: none;
@@ -548,6 +554,10 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
   <h2>記録しました</h2>
 
   <div id="summaryBox"></div>
+
+  <button onclick="generatePrompt()">AI評価用プロンプトを作成する</button>
+  <textarea id="promptOutput" placeholder="ここにAI評価用プロンプトが表示されます"></textarea>
+  <button onclick="copyPrompt()">プロンプトをコピーする</button>
 
   <button onclick="downloadCSV()">CSVでダウンロード</button>
   <button class="gray" onclick="resetSystem()">最初からやり直す</button>
@@ -1036,6 +1046,103 @@ function showSummary() {
   `;
 }
 
+function generatePrompt() {
+  if (!latestRecord) {
+    alert("記録がありません。");
+    return;
+  }
+
+  const r = latestRecord;
+
+  const prompt = `
+あなたは防災教育を専門とする教員です。
+以下は、地震発生時に通学路上にいると想定した避難判断シミュレーションにおける、生徒の回答記録です。
+
+この記録をもとに、生徒の対応を評価してください。
+
+【評価してほしい観点】
+1. 自分の安全を優先できているか
+2. 周囲の危険を具体的に見取れているか
+3. 地図情報を唯一の判断材料にせず、現地状況と組み合わせて判断できているか
+4. SNSや未確認情報をうのみにせず、情報の信頼性を考えられているか
+5. 状況変化に応じて判断を見直せているか
+6. 判断の理由が具体的で妥当か
+7. 実際の災害時に改善すべき点は何か
+
+【出力形式】
+・総合評価：A / B / C / D
+・よかった点
+・気になる点
+・改善アドバイス
+・次に同じ状況になったときの行動例
+・教員コメント案
+
+【生徒の記録】
+
+■ 基本情報
+時刻：${r.time}
+状態：${r.condition}
+一人かどうか：${r.alone}
+気持ち：${r.feeling}
+
+■ 現在地・周囲の状況
+現在地の説明：${r.location}
+緯度：${r.pinLat}
+経度：${r.pinLng}
+場所の特徴：${r.placeType}
+周囲の様子：${r.surrounding}
+画像の有無：${r.imageName ? "あり（" + r.imageName + "）" : "なし"}
+
+■ 入ってきた情報
+学校・地域などからの情報：
+${r.officialInfo}
+
+SNS情報：
+${r.snsPosts}
+
+■ 情報判断
+情報の扱い：${r.infoTrust}
+そう考えた理由：
+${r.trustReason}
+
+■ 1回目の避難判断
+選んだ行動：${r.firstAction}
+判断理由：
+${r.firstReason}
+迷ったこと：
+${r.firstWorry}
+
+■ 状況変化
+${r.situationChange}
+
+■ 再判断
+選んだ行動：${r.secondAction}
+再判断した理由：
+${r.secondReason}
+最初の判断から変えたこと・変えなかったこと：
+${r.changeReason}
+
+以上をもとに、災害時の判断力・情報リテラシー・安全確保の観点から評価してください。
+`.trim();
+
+  document.getElementById("promptOutput").value = prompt;
+}
+
+function copyPrompt() {
+  const textarea = document.getElementById("promptOutput");
+
+  if (!textarea.value.trim()) {
+    alert("先にAI評価用プロンプトを作成してください。");
+    return;
+  }
+
+  textarea.select();
+  textarea.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+
+  alert("プロンプトをコピーしました。");
+}
+
 function showTeacherPanel() {
   const records = JSON.parse(localStorage.getItem("evacuationRecords") || "[]");
   const panel = document.getElementById("teacherPanel");
@@ -1183,6 +1290,7 @@ function resetSystem() {
   document.getElementById("firstWorry").value = "";
   document.getElementById("secondReason").value = "";
   document.getElementById("changeReason").value = "";
+  document.getElementById("promptOutput").value = "";
 
   if (marker && map) {
     map.removeLayer(marker);
