@@ -287,7 +287,6 @@ th {
   border-radius: 8px;
 }
 
-/* ページごとの雰囲気変更 */
 body.page-step1 header { background: #c62828; }
 body.page-step2 header { background: #1565c0; }
 body.page-step3 header { background: #6a1b9a; }
@@ -398,7 +397,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
   <h2>地図上で現在地を指定してください</h2>
 
   <p class="small">
-    GPSは使いません。自分がいると思う場所を地図上でタップしてください。右上のレイヤーから「土地条件図」を重ねることができます。
+    GPSは使いません。自分がいると思う場所を地図上でタップしてください。右上のレイヤーから、土地条件図・陰影起伏図・標高段彩図を重ねることができます。
   </p>
 
   <div class="hazard-warning">
@@ -609,46 +608,16 @@ const situationChanges = [
 ];
 
 const pageInfo = {
-  step1: {
-    title: "STEP 1　安否確認",
-    sub: "まず、自分の状態と周囲にいる人を確認します。"
-  },
-  step2: {
-    title: "STEP 2　現在地確認",
-    sub: "GPSは使わず、地図上で自分のいる場所を指定します。"
-  },
-  step3: {
-    title: "STEP 3　周囲状況の確認",
-    sub: "地図・写真・周囲の様子をもとに危険を考えます。"
-  },
-  step4: {
-    title: "STEP 4　曖昧な情報・SNS情報",
-    sub: "入ってきた情報をそのまま信じてよいか判断します。"
-  },
-  step5: {
-    title: "STEP 5　1回目の避難判断",
-    sub: "今の情報をもとに、最初の行動を選びます。"
-  },
-  step6: {
-    title: "STEP 6　判断理由",
-    sub: "なぜその行動を選んだのかを言葉にします。"
-  },
-  step7: {
-    title: "STEP 7　状況変化",
-    sub: "余震・混雑・新しい情報によって状況が変わります。"
-  },
-  step8: {
-    title: "STEP 8　再判断",
-    sub: "最初の判断を続けるか、変えるかを考えます。"
-  },
-  step9: {
-    title: "STEP 9　避難誘導",
-    sub: "あなたの判断に応じた避難の考え方を確認します。"
-  },
-  step10: {
-    title: "STEP 10　記録完了",
-    sub: "安否・現在地・判断の記録を確認します。"
-  }
+  step1: { title: "STEP 1　安否確認", sub: "まず、自分の状態と周囲にいる人を確認します。" },
+  step2: { title: "STEP 2　現在地確認", sub: "GPSは使わず、地図上で自分のいる場所を指定します。" },
+  step3: { title: "STEP 3　周囲状況の確認", sub: "地図・写真・周囲の様子をもとに危険を考えます。" },
+  step4: { title: "STEP 4　曖昧な情報・SNS情報", sub: "入ってきた情報をそのまま信じてよいか判断します。" },
+  step5: { title: "STEP 5　1回目の避難判断", sub: "今の情報をもとに、最初の行動を選びます。" },
+  step6: { title: "STEP 6　判断理由", sub: "なぜその行動を選んだのかを言葉にします。" },
+  step7: { title: "STEP 7　状況変化", sub: "余震・混雑・新しい情報によって状況が変わります。" },
+  step8: { title: "STEP 8　再判断", sub: "最初の判断を続けるか、変えるかを考えます。" },
+  step9: { title: "STEP 9　避難誘導", sub: "あなたの判断に応じた避難の考え方を確認します。" },
+  step10: { title: "STEP 10　記録完了", sub: "安否・現在地・判断の記録を確認します。" }
 };
 
 function startSystem() {
@@ -656,14 +625,9 @@ function startSystem() {
 }
 
 function showOnly(id) {
-  const steps = [
-    "step1","step2","step3","step4","step5",
-    "step6","step7","step8","step9","step10"
-  ];
+  const steps = ["step1","step2","step3","step4","step5","step6","step7","step8","step9","step10"];
 
-  steps.forEach(step => {
-    document.getElementById(step).classList.add("hidden");
-  });
+  steps.forEach(step => document.getElementById(step).classList.add("hidden"));
 
   document.getElementById(id).classList.remove("hidden");
   document.getElementById("startCard").classList.add("hidden");
@@ -673,24 +637,18 @@ function showOnly(id) {
   document.body.classList.add("page-" + id);
 
   const currentStep = steps.indexOf(id) + 1;
-  const totalSteps = steps.length;
-  const percent = (currentStep / totalSteps) * 100;
+  const percent = (currentStep / steps.length) * 100;
 
   document.getElementById("pageTitle").textContent = pageInfo[id].title;
   document.getElementById("pageSubTitle").textContent = pageInfo[id].sub;
   document.getElementById("progressFill").style.width = percent + "%";
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
   if (id === "step2") {
     setTimeout(function() {
       initMap();
-      if (map) {
-        map.invalidateSize();
-      }
+      if (map) map.invalidateSize();
     }, 300);
   }
 }
@@ -705,35 +663,44 @@ function initMap() {
 
   const gsiPale = L.tileLayer(
     "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-    {
-      maxZoom: 18,
-      attribution: "地図：国土地理院"
-    }
+    { maxZoom: 18, attribution: "地図：国土地理院" }
   ).addTo(map);
 
   const gsiStandard = L.tileLayer(
     "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
-    {
-      maxZoom: 18,
-      attribution: "地図：国土地理院"
-    }
+    { maxZoom: 18, attribution: "地図：国土地理院" }
   );
 
   const osm = L.tileLayer(
     "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap contributors"
-    }
+    { maxZoom: 19, attribution: "© OpenStreetMap contributors" }
   );
 
   const landCondition = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/lcm25k_2012/{z}/{x}/{y}.png",
+    "https://cyberjapandata.gsi.go.jp/xyz/lcm25k/{z}/{x}/{y}.png",
     {
-      minZoom: 10,
+      minZoom: 14,
       maxZoom: 16,
-      opacity: 0.65,
+      opacity: 0.75,
       attribution: "土地条件図：国土地理院"
+    }
+  );
+
+  const hillshade = L.tileLayer(
+    "https://cyberjapandata.gsi.go.jp/xyz/hillshademap/{z}/{x}/{y}.png",
+    {
+      maxZoom: 16,
+      opacity: 0.45,
+      attribution: "陰影起伏図：国土地理院"
+    }
+  );
+
+  const relief = L.tileLayer(
+    "https://cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png",
+    {
+      maxZoom: 15,
+      opacity: 0.45,
+      attribution: "標高段彩図：国土地理院"
     }
   );
 
@@ -744,7 +711,9 @@ function initMap() {
   };
 
   const overlayMaps = {
-    "土地条件図（ハザード参考）": landCondition
+    "土地条件図（表示範囲あり）": landCondition,
+    "陰影起伏図（奈良でも表示されやすい）": hillshade,
+    "標高段彩図（奈良でも表示されやすい）": relief
   };
 
   L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
@@ -763,9 +732,7 @@ function initMap() {
       "現在地ピン：緯度 " + pinLat.toFixed(6) + "、経度 " + pinLng.toFixed(6);
   });
 
-  setTimeout(function() {
-    map.invalidateSize();
-  }, 500);
+  setTimeout(() => map.invalidateSize(), 500);
 }
 
 function goStep2() {
@@ -831,7 +798,7 @@ function goStep3() {
   message += "緯度：" + pinLat.toFixed(6) + "、経度：" + pinLng.toFixed(6) + "<br><br>";
 
   message += "<strong>地図情報について：</strong><br>";
-  message += "地図や土地条件図は、周囲の地形や災害リスクを考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
+  message += "土地条件図・陰影起伏図・標高段彩図は、地形や災害リスクを考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
 
   if (imageData) {
     message += "周囲の写真が記録されています。写真から分かる危険も考えてください。<br><br>";
@@ -853,7 +820,7 @@ function goStep3() {
     message += "近くにブロック塀があります。倒壊の危険があるため、できるだけ離れてください。";
     situationBox.className = "result-box emergency";
   } else if (placeType === "川・橋の近く") {
-    message += "川や橋の近くにいます。橋の損傷や液状化、津波・増水情報にも注意が必要です。安易に橋を渡らない判断も必要です。";
+    message += "川や橋の近くにいます。橋の損傷や液状化、増水情報にも注意が必要です。安易に橋を渡らない判断も必要です。";
     situationBox.className = "result-box emergency";
   } else if (placeType === "駅・商店街") {
     message += "駅や商店街では、看板・ガラス・人の混雑による危険があります。建物から離れ、落下物の少ない場所を探してください。";
@@ -1222,14 +1189,9 @@ function resetSystem() {
     marker = null;
   }
 
-  const steps = [
-    "step1","step2","step3","step4","step5",
-    "step6","step7","step8","step9","step10"
-  ];
+  const steps = ["step1","step2","step3","step4","step5","step6","step7","step8","step9","step10"];
 
-  steps.forEach(step => {
-    document.getElementById(step).classList.add("hidden");
-  });
+  steps.forEach(step => document.getElementById(step).classList.add("hidden"));
 
   document.getElementById("startCard").classList.remove("hidden");
   document.getElementById("pageTitleCard").classList.add("hidden");
