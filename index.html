@@ -348,7 +348,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
     <div class="arrow">↓</div>
     <div class="node">安否確認</div>
     <div class="arrow">↓</div>
-    <div class="node">ハザード参考地図で現在地を指定</div>
+    <div class="node">地図上で現在地を指定</div>
     <div class="arrow">↓</div>
     <div class="node">写真・周囲状況を記録</div>
     <div class="arrow">↓</div>
@@ -403,12 +403,12 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
   <h2>地図上で現在地を指定してください</h2>
 
   <p class="small">
-    GPSは使いません。自分がいると思う場所を地図上でタップしてください。右上のレイヤーから、土地条件図・陰影起伏図・標高段彩図を重ねることができます。
+    GPSは使いません。自分がいると思う場所を地図上でタップしてください。
   </p>
 
   <div class="hazard-warning">
     <strong>重要：</strong><br>
-    この地図・ハザード参考レイヤーは、避難訓練・防災学習のための参考情報です。<br>
+    この地図は避難訓練・防災学習のための参考情報です。<br>
     実際の災害時には、この画面だけを唯一の判断材料にせず、学校・自治体・警察・消防・気象庁等の最新情報と、目の前の状況を必ず合わせて判断してください。
   </div>
 
@@ -447,7 +447,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
 
   <div class="hazard-warning">
     <strong>確認：</strong><br>
-    地図上のハザード情報は参考情報です。地図で安全そうに見えても、実際には落下物・火災・倒壊・混雑・余震などの危険があります。必ず周囲を観察して判断してください。
+    地図上では安全そうに見えても、実際には落下物・火災・倒壊・混雑・余震などの危険があります。必ず周囲を観察して判断してください。
   </div>
 
   <button onclick="goStep4()">入ってきた情報を確認する</button>
@@ -671,62 +671,13 @@ function initMap() {
 
   map = L.map("mapBox").setView([34.6851, 135.8048], 15);
 
-  const gsiPale = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-    { maxZoom: 18, attribution: "地図：国土地理院" }
-  ).addTo(map);
-
-  const gsiStandard = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
-    { maxZoom: 18, attribution: "地図：国土地理院" }
-  );
-
-  const osm = L.tileLayer(
+  L.tileLayer(
     "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    { maxZoom: 19, attribution: "© OpenStreetMap contributors" }
-  );
-
-  const landCondition = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/lcm25k/{z}/{x}/{y}.png",
     {
-      minZoom: 14,
-      maxZoom: 16,
-      opacity: 0.75,
-      attribution: "土地条件図：国土地理院"
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors"
     }
-  );
-
-  const hillshade = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/hillshademap/{z}/{x}/{y}.png",
-    {
-      maxZoom: 16,
-      opacity: 0.45,
-      attribution: "陰影起伏図：国土地理院"
-    }
-  );
-
-  const relief = L.tileLayer(
-    "https://cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png",
-    {
-      maxZoom: 15,
-      opacity: 0.45,
-      attribution: "標高段彩図：国土地理院"
-    }
-  );
-
-  const baseMaps = {
-    "淡色地図（国土地理院）": gsiPale,
-    "標準地図（国土地理院）": gsiStandard,
-    "OpenStreetMap": osm
-  };
-
-  const overlayMaps = {
-    "土地条件図（表示範囲あり）": landCondition,
-    "陰影起伏図（奈良でも表示されやすい）": hillshade,
-    "標高段彩図（奈良でも表示されやすい）": relief
-  };
-
-  L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+  ).addTo(map);
 
   map.on("click", function(e) {
     pinLat = e.latlng.lat;
@@ -808,7 +759,7 @@ function goStep3() {
   message += "緯度：" + pinLat.toFixed(6) + "、経度：" + pinLng.toFixed(6) + "<br><br>";
 
   message += "<strong>地図情報について：</strong><br>";
-  message += "土地条件図・陰影起伏図・標高段彩図は、地形や災害リスクを考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
+  message += "地図は現在地を考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
 
   if (imageData) {
     message += "周囲の写真が記録されています。写真から分かる危険も考えてください。<br><br>";
@@ -830,7 +781,7 @@ function goStep3() {
     message += "近くにブロック塀があります。倒壊の危険があるため、できるだけ離れてください。";
     situationBox.className = "result-box emergency";
   } else if (placeType === "川・橋の近く") {
-    message += "川や橋の近くにいます。橋の損傷や液状化、増水情報にも注意が必要です。安易に橋を渡らない判断も必要です。";
+    message += "川や橋の近くにいます。橋の損傷や増水情報にも注意が必要です。安易に橋を渡らない判断も必要です。";
     situationBox.className = "result-box emergency";
   } else if (placeType === "駅・商店街") {
     message += "駅や商店街では、看板・ガラス・人の混雑による危険があります。建物から離れ、落下物の少ない場所を探してください。";
@@ -1055,7 +1006,7 @@ function generatePrompt() {
   const r = latestRecord;
 
   const prompt = `
-あなたは防災教育を専門とする教員です。
+あなたは防災教育を専門家です。
 以下は、地震発生時に通学路上にいると想定した避難判断シミュレーションにおける、生徒の回答記録です。
 
 この記録をもとに、生徒の対応を評価してください。
@@ -1075,7 +1026,7 @@ function generatePrompt() {
 ・気になる点
 ・改善アドバイス
 ・次に同じ状況になったときの行動例
-・教員コメント案
+・総合コメント
 
 【生徒の記録】
 
