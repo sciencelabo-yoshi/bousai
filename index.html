@@ -3,222 +3,1314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>避難判断システム</title>
+<title>避難判断・安否確認システム</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#f2f4f7;}
-header{background:#c62828;color:#fff;padding:15px;text-align:center;}
-.page{display:none;padding:20px;}
-.active{display:block;}
-.card{background:#fff;padding:20px;border-radius:12px;margin-bottom:15px;}
-button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;background:#1976d2;color:white;}
-textarea,input,select{width:100%;margin-top:10px;padding:10px;}
-#map{height:300px;margin-top:10px;}
-.warning{background:#fff3cd;padding:10px;margin-bottom:10px;}
-.hazard{background:#ffebee;padding:10px;margin-top:10px;}
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Meiryo", sans-serif;
+  background: #f2f4f7;
+  color: #222;
+}
+
+header {
+  background: #c62828;
+  color: white;
+  padding: 16px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.warning {
+  background: #fff3cd;
+  color: #5c4400;
+  padding: 10px 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.hazard-warning {
+  background: #ffebee;
+  color: #7f0000;
+  border-left: 6px solid #c62828;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 12px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+main {
+  max-width: 780px;
+  margin: 20px auto;
+  padding: 0 14px 40px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.page-title-card {
+  border-left: 8px solid #1976d2;
+}
+
+#pageTitle {
+  margin: 0;
+  font-size: 22px;
+}
+
+#pageSubTitle {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #ddd;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+#progressFill {
+  height: 100%;
+  width: 0%;
+  background: #1976d2;
+  transition: width 0.3s;
+}
+
+.step {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 21px;
+}
+
+p {
+  line-height: 1.7;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  font-weight: bold;
+}
+
+input, select, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 90px;
+}
+
+#promptOutput {
+  min-height: 360px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.danger { background: #c62828; }
+.safe { background: #2e7d32; }
+.gray { background: #666; }
+
+.choice {
+  background: #fff;
+  color: #222;
+  border: 2px solid #1976d2;
+}
+
+.choice:hover {
+  background: #e3f2fd;
+}
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.node {
+  background: #e3f2fd;
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  padding: 10px 14px;
+  width: 90%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.arrow {
+  font-size: 24px;
+  color: #555;
+  margin: 4px;
+}
+
+.result-box {
+  background: #f7f7f7;
+  border-left: 6px solid #1976d2;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+  line-height: 1.7;
+}
+
+.emergency {
+  border-left-color: #c62828;
+  background: #ffebee;
+}
+
+.good {
+  border-left-color: #2e7d32;
+  background: #e8f5e9;
+}
+
+.uncertain {
+  border-left-color: #f9a825;
+  background: #fff8e1;
+}
+
+.sns-box {
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.sns-post {
+  background: white;
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  border-left: 5px solid #555;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.sns-name {
+  font-weight: bold;
+  color: #1976d2;
+  font-size: 14px;
+}
+
+.sns-text {
+  margin-top: 4px;
+  line-height: 1.6;
+}
+
+.hidden {
+  display: none;
+}
+
+#mapBox {
+  width: 100%;
+  height: 420px;
+  border: 2px solid #aaa;
+  border-radius: 14px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.pin-text {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: 12px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #eee;
+}
+
+.small {
+  font-size: 13px;
+  color: #666;
+}
+
+.record-img {
+  width: 80px;
+  border-radius: 8px;
+}
+
+body.page-step1 header { background: #c62828; }
+body.page-step2 header { background: #1565c0; }
+body.page-step3 header { background: #6a1b9a; }
+body.page-step4 header { background: #ef6c00; }
+body.page-step5 header { background: #2e7d32; }
+body.page-step6 header { background: #455a64; }
+body.page-step7 header { background: #b71c1c; }
+body.page-step8 header { background: #5d4037; }
+body.page-step9 header { background: #00695c; }
+body.page-step10 header { background: #283593; }
+
+body.page-step2 .page-title-card { border-left-color: #1565c0; }
+body.page-step3 .page-title-card { border-left-color: #6a1b9a; }
+body.page-step4 .page-title-card { border-left-color: #ef6c00; }
+body.page-step5 .page-title-card { border-left-color: #2e7d32; }
+body.page-step6 .page-title-card { border-left-color: #455a64; }
+body.page-step7 .page-title-card { border-left-color: #b71c1c; }
+body.page-step8 .page-title-card { border-left-color: #5d4037; }
+body.page-step9 .page-title-card { border-left-color: #00695c; }
+body.page-step10 .page-title-card { border-left-color: #283593; }
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>避難判断・安否確認システム</h2>
+  <h1>避難判断・安否確認システム</h1>
 </header>
 
 <div class="warning">
-※このシステムは訓練用です。実際の災害では必ず公式情報を優先してください。
+  ※これは避難訓練・防災学習用のシステムです。実際の災害時は学校・自治体・警察・消防等の指示を優先してください。
 </div>
 
-<!-- ページ1 -->
-<div id="p1" class="page active">
-<div class="card">
-<h3>開始</h3>
-<button onclick="next(2)">開始する</button>
-</div>
-</div>
+<main>
 
-<!-- ページ2 -->
-<div id="p2" class="page">
-<div class="card">
-<h3>安否確認</h3>
-
-<input id="name" placeholder="名前">
-
-<select id="condition">
-<option value="">状態</option>
-<option>無事</option>
-<option>けが</option>
-<option>動けない</option>
-</select>
-
-<button onclick="next(3)">次へ</button>
-</div>
+<div id="pageTitleCard" class="card page-title-card hidden">
+  <h2 id="pageTitle">STEP</h2>
+  <p id="pageSubTitle"></p>
+  <div class="progress-bar">
+    <div id="progressFill"></div>
+  </div>
 </div>
 
-<!-- ページ3 -->
-<div id="p3" class="page">
-<div class="card">
-<h3>現在地</h3>
+<div id="startCard" class="card">
+  <h2>現在の想定</h2>
+  <p>
+    下校直後、通学路上で強い地震の揺れを感じました。<br>
+    あなたは今、自分の安全を確認し、周囲の状況や不確かな情報をもとに、次の行動を判断する必要があります。
+  </p>
 
-<div class="hazard">
-⚠ 地図は参考情報です。唯一の判断材料にしないこと
+  <div class="flow">
+    <div class="node">地震発生</div>
+    <div class="arrow">↓</div>
+    <div class="node">安否確認</div>
+    <div class="arrow">↓</div>
+    <div class="node">地図上で現在地を指定</div>
+    <div class="arrow">↓</div>
+    <div class="node">写真・周囲状況を記録</div>
+    <div class="arrow">↓</div>
+    <div class="node">SNS・未確認情報を判断</div>
+    <div class="arrow">↓</div>
+    <div class="node">避難行動を選択</div>
+    <div class="arrow">↓</div>
+    <div class="node">状況変化後に再判断</div>
+  </div>
+
+  <button onclick="startSystem()">開始する</button>
 </div>
 
-<div id="map"></div>
+<div id="step1" class="card hidden">
+  <div class="step">STEP 1　安否確認</div>
+  <h2>あなたの状態を入力してください</h2>
 
-<button onclick="next(4)">次へ</button>
-</div>
-</div>
+  <label>名前</label>
+  <input type="text" id="name" placeholder="例：3年1組 〇〇">
 
-<!-- ページ4 -->
-<div id="p4" class="page">
-<div class="card">
-<h3>周囲の様子</h3>
+  <label>現在の状態</label>
+  <select id="condition">
+    <option value="">選択してください</option>
+    <option value="無事">無事</option>
+    <option value="軽いけが">軽いけが</option>
+    <option value="動けない">動けない</option>
+    <option value="友人がけが">友人がけがをしている</option>
+  </select>
 
-<textarea id="situation" placeholder="周囲の様子"></textarea>
+  <label>今、一人ですか？</label>
+  <select id="alone">
+    <option value="">選択してください</option>
+    <option value="一人">一人</option>
+    <option value="友人と一緒">友人と一緒</option>
+    <option value="周囲に大人がいる">周囲に大人がいる</option>
+  </select>
 
-<input type="file" id="img">
+  <label>今の気持ち</label>
+  <select id="feeling">
+    <option value="">選択してください</option>
+    <option value="落ち着いている">落ち着いている</option>
+    <option value="少し不安">少し不安</option>
+    <option value="かなり怖い">かなり怖い</option>
+    <option value="何をすればよいか分からない">何をすればよいか分からない</option>
+  </select>
 
-<button onclick="next(5)">次へ</button>
-</div>
-</div>
-
-<!-- ページ5 -->
-<div id="p5" class="page">
-<div class="card">
-<h3>SNS情報</h3>
-
-<p>「橋は安全らしい」</p>
-
-<select id="sns">
-<option value="">どう判断する？</option>
-<option>信じる</option>
-<option>疑う</option>
-<option>照合する</option>
-</select>
-
-<button onclick="next(6)">次へ</button>
-</div>
-</div>
-
-<!-- ページ6 -->
-<div id="p6" class="page">
-<div class="card">
-<h3>行動選択</h3>
-
-<select id="action">
-<option value="">選択</option>
-<option>その場待機</option>
-<option>公園へ</option>
-<option>帰宅</option>
-<option>学校へ</option>
-</select>
-
-<button onclick="next(7)">次へ</button>
-</div>
+  <button onclick="goStep2()">次へ</button>
 </div>
 
-<!-- ページ7 -->
-<div id="p7" class="page">
-<div class="card">
-<h3>理由</h3>
+<div id="step2" class="card hidden">
+  <div class="step">STEP 2　現在地確認</div>
+  <h2>地図上で現在地を指定してください</h2>
 
-<textarea id="reason"></textarea>
+  <p class="small">
+    GPSは使いません。自分がいると思う場所を地図上でタップしてください。
+  </p>
 
-<button onclick="makePrompt()">AI評価用プロンプト作成</button>
+  <div class="hazard-warning">
+    <strong>重要：</strong><br>
+    この地図は避難訓練・防災学習のための参考情報です。<br>
+    実際の災害時には、この画面だけを唯一の判断材料にせず、学校・自治体・警察・消防・気象庁等の最新情報と、目の前の状況を必ず合わせて判断してください。
+  </div>
+
+  <div id="mapBox"></div>
+  <div id="pinText" class="pin-text">現在地ピン：未設定</div>
+
+  <label>現在地の説明</label>
+  <input type="text" id="locationText" placeholder="例：〇〇交差点、△△公園前、□□橋の近く">
+
+  <label>近くにあるもの</label>
+  <select id="placeType">
+    <option value="">選択してください</option>
+    <option value="広い公園">広い公園</option>
+    <option value="住宅街">住宅街</option>
+    <option value="ブロック塀の近く">ブロック塀の近く</option>
+    <option value="川・橋の近く">川・橋の近く</option>
+    <option value="駅・商店街">駅・商店街</option>
+    <option value="学校の近く">学校の近く</option>
+    <option value="自宅の近く">自宅の近く</option>
+  </select>
+
+  <label>周囲の写真をアップロード</label>
+  <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+  <div id="imagePreviewArea"></div>
+
+  <label>周囲の様子</label>
+  <textarea id="surrounding" placeholder="例：電柱が揺れている、塀がひび割れている、人が集まっている、火災のにおいがする"></textarea>
+
+  <button onclick="goStep3()">状況を確認する</button>
 </div>
+
+<div id="step3" class="card hidden">
+  <div class="step">STEP 3　周囲状況の確認</div>
+  <h2>現在の状況</h2>
+  <div id="situationBox" class="result-box"></div>
+
+  <div class="hazard-warning">
+    <strong>確認：</strong><br>
+    地図上では安全そうに見えても、実際には落下物・火災・倒壊・混雑・余震などの危険があります。必ず周囲を観察して判断してください。
+  </div>
+
+  <button onclick="goStep4()">入ってきた情報を確認する</button>
 </div>
 
-<!-- ページ8 -->
-<div id="p8" class="page">
-<div class="card">
-<h3>AI評価</h3>
+<div id="step4" class="card hidden">
+  <div class="step">STEP 4　曖昧な情報・SNS情報</div>
+  <h2>今、次のような情報が入ってきています</h2>
 
-<div class="hazard">
-① 下のプロンプトをコピー<br>
-② 下のリンクを開く<br>
-③ 「AIに聞こう」に貼り付け
+  <div id="officialInfoBox" class="result-box uncertain"></div>
+
+  <div class="sns-box">
+    <strong>SNS上の情報</strong>
+    <div id="snsArea"></div>
+  </div>
+
+  <label>この情報をどう扱いますか？</label>
+  <select id="infoTrust">
+    <option value="">選択してください</option>
+    <option value="信じて行動する">信じて行動する</option>
+    <option value="一部参考にする">一部参考にする</option>
+    <option value="まだ信じない">まだ信じない</option>
+    <option value="他の情報と照合する">他の情報と照合する</option>
+  </select>
+
+  <label>そう考えた理由</label>
+  <textarea id="trustReason" placeholder="例：発信元が分からないので、そのまま信じるのは危ないと思った。複数の情報を見て判断したい。"></textarea>
+
+  <button onclick="goStep5()">避難行動を選ぶ</button>
 </div>
 
-<a href="https://edu-ai.jp/sukuten/login.htm" target="_blank">
-▶ スクールAIを開く
-</a>
+<div id="step5" class="card hidden">
+  <div class="step">STEP 5　1回目の避難判断</div>
+  <h2>次にどうしますか？</h2>
 
-<textarea id="prompt"></textarea>
-
-<button onclick="copyPrompt()">コピー</button>
-
+  <button class="choice" onclick="chooseFirstAction('その場で安全確保')">その場で安全を確保する</button>
+  <button class="choice" onclick="chooseFirstAction('広い場所へ移動')">近くの広い場所へ移動する</button>
+  <button class="choice" onclick="chooseFirstAction('学校へ戻る')">学校へ戻る</button>
+  <button class="choice" onclick="chooseFirstAction('自宅へ向かう')">自宅へ向かう</button>
+  <button class="choice" onclick="chooseFirstAction('大人・近くの人に助けを求める')">大人や近くの人に助けを求める</button>
 </div>
+
+<div id="step6" class="card hidden">
+  <div class="step">STEP 6　判断理由</div>
+  <h2>なぜその行動を選びましたか？</h2>
+
+  <div id="firstActionBox" class="result-box"></div>
+
+  <label>判断した理由</label>
+  <textarea id="firstReason" placeholder="例：ブロック塀が近くにあり危険だと思ったから。広い場所の方が落下物が少ないと考えたから。"></textarea>
+
+  <label>迷ったこと</label>
+  <textarea id="firstWorry" placeholder="例：学校に戻るべきか、公園で待つべきか迷った。SNSの情報が本当か分からなかった。"></textarea>
+
+  <button onclick="goStep7()">状況変化を確認する</button>
 </div>
+
+<div id="step7" class="card hidden">
+  <div class="step">STEP 7　状況変化</div>
+  <h2>数分後、状況が変わりました</h2>
+
+  <div id="changeBox" class="result-box emergency"></div>
+
+  <h2>もう一度判断してください</h2>
+
+  <button class="choice" onclick="chooseSecondAction('その場で待機を続ける')">その場で待機を続ける</button>
+  <button class="choice" onclick="chooseSecondAction('別の広い場所へ移動する')">別の広い場所へ移動する</button>
+  <button class="choice" onclick="chooseSecondAction('学校へ連絡・移動を考える')">学校へ連絡・移動を考える</button>
+  <button class="choice" onclick="chooseSecondAction('自宅方面へ進む')">自宅方面へ進む</button>
+  <button class="choice" onclick="chooseSecondAction('周囲の大人に助けを求める')">周囲の大人に助けを求める</button>
+</div>
+
+<div id="step8" class="card hidden">
+  <div class="step">STEP 8　再判断の理由</div>
+  <h2>再判断の理由を書いてください</h2>
+
+  <div id="secondActionBox" class="result-box"></div>
+
+  <label>再判断した理由</label>
+  <textarea id="secondReason" placeholder="例：最初の場所は安全そうだったが、人が増えて混乱してきたので移動することにした。"></textarea>
+
+  <label>最初の判断から変えたこと・変えなかったこと</label>
+  <textarea id="changeReason" placeholder="例：最初は学校へ戻ろうと思ったが、通学路に危険があると思い直した。"></textarea>
+
+  <button onclick="showGuidance()">避難誘導を表示する</button>
+</div>
+
+<div id="step9" class="card hidden">
+  <div class="step">STEP 9　避難誘導</div>
+  <h2>あなたへの避難誘導</h2>
+
+  <div id="guidanceBox" class="result-box"></div>
+
+  <div class="hazard-warning">
+    <strong>最終確認：</strong><br>
+    この避難誘導は訓練用です。実際の災害では、必ず自治体・学校・警察・消防・気象庁等の最新情報を確認し、周囲の安全を最優先してください。
+  </div>
+
+  <button class="safe" onclick="saveRecord()">安否・判断を記録する</button>
+</div>
+
+<div id="step10" class="card hidden">
+  <div class="step">STEP 10　記録完了</div>
+  <h2>記録しました</h2>
+
+  <div id="summaryBox"></div>
+
+  <button onclick="generatePrompt()">AI評価用プロンプトを作成する</button>
+  <textarea id="promptOutput" placeholder="ここにAI評価用プロンプトが表示されます"></textarea>
+  <button onclick="copyPrompt()">プロンプトをコピーする</button>
+
+  <div class="hazard-warning">
+    <strong>AI評価の方法：</strong><br>
+    ①「AI評価用プロンプトを作成する」を押す<br>
+    ②「プロンプトをコピーする」を押す<br>
+    ③ 下のボタンからスクールAIを開く<br>
+    ④ スクールAIの「AIに聞こう」に貼り付けて評価する
+  </div>
+
+  <button onclick="openSchoolAI()">スクールAI「AIに聞こう」を開く</button>
+
+  <button onclick="downloadCSV()">CSVでダウンロード</button>
+  <button class="gray" onclick="resetSystem()">最初からやり直す</button>
+</div>
+
+<div id="teacherPanel" class="card hidden">
+  <h2>記録一覧</h2>
+  <p class="small">この端末内に保存された記録です。</p>
+  <div id="recordTable"></div>
+  <button class="danger" onclick="clearRecords()">記録を削除する</button>
+</div>
+
+</main>
 
 <script>
-let map,marker,lat,lng;
+let firstAction = "";
+let secondAction = "";
+let latestRecord = null;
 
-function next(n){
-document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-document.getElementById("p"+n).classList.add("active");
+let pinLat = null;
+let pinLng = null;
+let map = null;
+let marker = null;
 
-if(n==3)initMap();
+let imageData = "";
+let imageName = "";
+
+let selectedOfficialInfo = "";
+let selectedSNSPosts = [];
+let selectedSituationChange = "";
+
+const officialInfos = [
+  "学校からの連絡はまだ届いていません。地域の防災無線では『安全な場所で待機』と呼びかけていますが、詳しい場所の指定はありません。",
+  "近くの避難所が開設されたという情報があります。ただし、混雑状況は不明です。",
+  "駅前で火災が発生したという未確認情報があります。消防の発表はまだ確認できていません。",
+  "一部の道路で通行しにくい場所があるようです。ただし、どの道路かははっきりしていません。",
+  "学校方面に戻る生徒がいるという情報があります。ただし、学校が安全かどうかはまだ確認できていません。"
+];
+
+const snsPosts = [
+  { name: "近くにいた人", text: "〇〇橋、みんな普通に渡ってるっぽい。たぶん大丈夫。" },
+  { name: "地域情報アカウント", text: "駅前で煙が見えるとの投稿あり。公式情報ではありません。" },
+  { name: "友だちA", text: "学校に戻った方がいいって誰かが言ってた。" },
+  { name: "近所の人", text: "公園に人が集まってきている。安全そうだけど、かなり混んできた。" },
+  { name: "不明アカウント", text: "自宅に帰れる人はすぐ帰った方がいいらしい！" },
+  { name: "友だちB", text: "ブロック塀が倒れているところを見た。細い道は避けた方がよさそう。" },
+  { name: "地域掲示板", text: "停電している地域があります。信号が止まっている場所もあるようです。" },
+  { name: "不明アカウント", text: "避難所は満員らしい。行っても意味ないかも。" }
+];
+
+const situationChanges = [
+  "強い余震がありました。近くの建物からガラスが落ちたような音が聞こえました。",
+  "人が急に集まり始め、周囲が混雑してきました。泣いている小学生もいます。",
+  "SNSで『さっきの情報は間違いだったかも』という投稿が出ています。",
+  "近くの道が倒れた自転車や落下物で通りにくくなっています。",
+  "遠くで煙のようなものが見えます。ただし、火災かどうかは分かりません。",
+  "学校から『無理に戻らず、近くの安全な場所で待機』という連絡が入った想定です。"
+];
+
+const pageInfo = {
+  step1: { title: "STEP 1　安否確認", sub: "まず、自分の状態と周囲にいる人を確認します。" },
+  step2: { title: "STEP 2　現在地確認", sub: "GPSは使わず、地図上で自分のいる場所を指定します。" },
+  step3: { title: "STEP 3　周囲状況の確認", sub: "地図・写真・周囲の様子をもとに危険を考えます。" },
+  step4: { title: "STEP 4　曖昧な情報・SNS情報", sub: "入ってきた情報をそのまま信じてよいか判断します。" },
+  step5: { title: "STEP 5　1回目の避難判断", sub: "今の情報をもとに、最初の行動を選びます。" },
+  step6: { title: "STEP 6　判断理由", sub: "なぜその行動を選んだのかを言葉にします。" },
+  step7: { title: "STEP 7　状況変化", sub: "余震・混雑・新しい情報によって状況が変わります。" },
+  step8: { title: "STEP 8　再判断", sub: "最初の判断を続けるか、変えるかを考えます。" },
+  step9: { title: "STEP 9　避難誘導", sub: "あなたの判断に応じた避難の考え方を確認します。" },
+  step10: { title: "STEP 10　記録完了", sub: "安否・現在地・判断の記録を確認します。" }
+};
+
+function startSystem() {
+  showOnly("step1");
 }
 
-function initMap(){
-if(map)return;
+function showOnly(id) {
+  const steps = [
+    "step1","step2","step3","step4","step5",
+    "step6","step7","step8","step9","step10"
+  ];
 
-map=L.map('map').setView([34.6851,135.8048],15);
+  steps.forEach(step => {
+    document.getElementById(step).classList.add("hidden");
+  });
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
+  document.getElementById(id).classList.remove("hidden");
+  document.getElementById("startCard").classList.add("hidden");
+  document.getElementById("pageTitleCard").classList.remove("hidden");
 
-map.on("click",e=>{
-lat=e.latlng.lat;
-lng=e.latlng.lng;
+  document.body.className = "";
+  document.body.classList.add("page-" + id);
 
-if(marker)marker.setLatLng(e.latlng);
-else marker=L.marker(e.latlng).addTo(map);
-});
+  const currentStep = steps.indexOf(id) + 1;
+  const percent = (currentStep / steps.length) * 100;
+
+  document.getElementById("pageTitle").textContent = pageInfo[id].title;
+  document.getElementById("pageSubTitle").textContent = pageInfo[id].sub;
+  document.getElementById("progressFill").style.width = percent + "%";
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (id === "step2") {
+    setTimeout(function() {
+      initMap();
+      if (map) {
+        map.invalidateSize();
+      }
+    }, 300);
+  }
 }
 
-function makePrompt(){
+function initMap() {
+  if (map) {
+    map.invalidateSize();
+    return;
+  }
 
-const text=`
-あなたは防災教育の専門家です。
+  map = L.map("mapBox").setView([34.6851, 135.8048], 15);
 
-以下は生徒の避難行動記録です。
+  L.tileLayer(
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors"
+    }
+  ).addTo(map);
 
-【情報】
-名前：${name.value}
-状態：${condition.value}
-位置：${lat},${lng}
-周囲：${situation.value}
-SNS判断：${sns.value}
-行動：${action.value}
-理由：${reason.value}
+  map.on("click", function(e) {
+    pinLat = e.latlng.lat;
+    pinLng = e.latlng.lng;
 
-【評価観点】
-1 安全確保
-2 危険認識
-3 情報判断
-4 再判断
-5 妥当性
+    if (marker) {
+      marker.setLatLng(e.latlng);
+    } else {
+      marker = L.marker(e.latlng).addTo(map);
+    }
 
-【出力】
-・総合評価
-・良い点
-・改善点
-`;
+    document.getElementById("pinText").textContent =
+      "現在地ピン：緯度 " + pinLat.toFixed(6) + "、経度 " + pinLng.toFixed(6);
+  });
 
-document.getElementById("prompt").value=text;
-next(8);
+  setTimeout(function() {
+    map.invalidateSize();
+  }, 500);
 }
 
-function copyPrompt(){
-navigator.clipboard.writeText(prompt.value);
-alert("コピーしました");
+function goStep2() {
+  const name = document.getElementById("name").value.trim();
+  const condition = document.getElementById("condition").value;
+  const alone = document.getElementById("alone").value;
+  const feeling = document.getElementById("feeling").value;
+
+  if (!name || !condition || !alone || !feeling) {
+    alert("名前・状態・一人かどうか・今の気持ちを入力してください。");
+    return;
+  }
+
+  showOnly("step2");
 }
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  const previewArea = document.getElementById("imagePreviewArea");
+
+  if (!file) {
+    imageData = "";
+    imageName = "";
+    previewArea.innerHTML = "";
+    return;
+  }
+
+  imageName = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    imageData = e.target.result;
+    previewArea.innerHTML = `
+      <img src="${imageData}" class="preview-img">
+      <p class="small">選択した画像：${escapeHtml(imageName)}</p>
+    `;
+  };
+  reader.readAsDataURL(file);
+}
+
+function goStep3() {
+  const locationText = document.getElementById("locationText").value.trim();
+  const placeType = document.getElementById("placeType").value;
+  const surrounding = document.getElementById("surrounding").value.trim();
+
+  if (pinLat === null || pinLng === null) {
+    alert("地図上で現在地ピンを立ててください。");
+    return;
+  }
+
+  if (!locationText || !placeType || !surrounding) {
+    alert("現在地の説明・近くにあるもの・周囲の様子を入力してください。");
+    return;
+  }
+
+  const condition = document.getElementById("condition").value;
+  const situationBox = document.getElementById("situationBox");
+
+  let message = "";
+
+  message += "あなたは地図上に現在地を指定しました。<br>";
+  message += "現在地の説明：" + escapeHtml(locationText) + "<br>";
+  message += "緯度：" + pinLat.toFixed(6) + "、経度：" + pinLng.toFixed(6) + "<br><br>";
+
+  message += "<strong>地図情報について：</strong><br>";
+  message += "地図は現在地を考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
+
+  if (imageData) {
+    message += "周囲の写真が記録されています。写真から分かる危険も考えてください。<br><br>";
+  } else {
+    message += "周囲の写真は未登録です。見えている状況を言葉で確認してください。<br><br>";
+  }
+
+  if (condition === "動けない") {
+    message += "あなたは自力で移動することが難しい状態です。無理に動かず、安全な姿勢を取り、周囲の人に助けを求める必要があります。<br><br>";
+  } else if (condition === "軽いけが") {
+    message += "軽いけががあります。走ったり無理に移動したりせず、落ち着いて安全な場所を確認してください。<br><br>";
+  } else if (condition === "友人がけが") {
+    message += "友人がけがをしています。自分の安全を確保したうえで、近くの大人や周囲の人に助けを求める必要があります。<br><br>";
+  } else {
+    message += "現在、あなた自身は無事です。ただし、余震や落下物に注意しながら行動する必要があります。<br><br>";
+  }
+
+  if (placeType === "ブロック塀の近く") {
+    message += "近くにブロック塀があります。倒壊の危険があるため、できるだけ離れてください。";
+    situationBox.className = "result-box emergency";
+  } else if (placeType === "川・橋の近く") {
+    message += "川や橋の近くにいます。橋の損傷や増水情報にも注意が必要です。安易に橋を渡らない判断も必要です。";
+    situationBox.className = "result-box emergency";
+  } else if (placeType === "駅・商店街") {
+    message += "駅や商店街では、看板・ガラス・人の混雑による危険があります。建物から離れ、落下物の少ない場所を探してください。";
+    situationBox.className = "result-box emergency";
+  } else if (placeType === "広い公園") {
+    message += "広い公園の近くにいます。落下物が少ない場所であれば、一時的に安全を確保しやすい可能性があります。";
+    situationBox.className = "result-box good";
+  } else if (placeType === "学校の近く") {
+    message += "学校の近くにいます。学校が安全確認済みとは限りません。周囲の危険を確認し、先生や大人の指示が得られるか考えてください。";
+    situationBox.className = "result-box";
+  } else if (placeType === "自宅の近く") {
+    message += "自宅の近くにいます。ただし、家の中や周囲が安全とは限りません。建物や塀の状況を確認する必要があります。";
+    situationBox.className = "result-box";
+  } else {
+    message += "住宅街では、屋根瓦・塀・電柱・ガラスなどに注意してください。狭い道では避難経路がふさがれる可能性があります。";
+    situationBox.className = "result-box";
+  }
+
+  message += "<br><br><strong>注意：</strong>今見えている情報だけで判断せず、地図・現地状況・公式情報・周囲の大人の指示を組み合わせて判断してください。";
+
+  situationBox.innerHTML = message;
+  showOnly("step3");
+}
+
+function goStep4() {
+  selectedOfficialInfo = randomItem(officialInfos);
+  selectedSNSPosts = shuffleArray(snsPosts).slice(0, 3);
+
+  document.getElementById("officialInfoBox").innerHTML =
+    "<strong>入ってきた情報：</strong><br>" + escapeHtml(selectedOfficialInfo);
+
+  const snsArea = document.getElementById("snsArea");
+  snsArea.innerHTML = "";
+
+  selectedSNSPosts.forEach(post => {
+    snsArea.innerHTML += `
+      <div class="sns-post">
+        <div class="sns-name">@${escapeHtml(post.name)}</div>
+        <div class="sns-text">${escapeHtml(post.text)}</div>
+      </div>
+    `;
+  });
+
+  showOnly("step4");
+}
+
+function goStep5() {
+  const infoTrust = document.getElementById("infoTrust").value;
+  const trustReason = document.getElementById("trustReason").value.trim();
+
+  if (!infoTrust || !trustReason) {
+    alert("情報の扱い方と理由を入力してください。");
+    return;
+  }
+
+  showOnly("step5");
+}
+
+function chooseFirstAction(action) {
+  firstAction = action;
+  document.getElementById("firstActionBox").innerHTML =
+    "最初に選んだ行動：<strong>" + escapeHtml(action) + "</strong>";
+  showOnly("step6");
+}
+
+function goStep7() {
+  const firstReason = document.getElementById("firstReason").value.trim();
+  const firstWorry = document.getElementById("firstWorry").value.trim();
+
+  if (!firstReason || !firstWorry) {
+    alert("判断理由と迷ったことを入力してください。");
+    return;
+  }
+
+  selectedSituationChange = randomItem(situationChanges);
+
+  document.getElementById("changeBox").innerHTML =
+    "<strong>状況変化：</strong><br>" + escapeHtml(selectedSituationChange);
+
+  showOnly("step7");
+}
+
+function chooseSecondAction(action) {
+  secondAction = action;
+  document.getElementById("secondActionBox").innerHTML =
+    "再判断で選んだ行動：<strong>" + escapeHtml(action) + "</strong>";
+  showOnly("step8");
+}
+
+function showGuidance() {
+  const secondReason = document.getElementById("secondReason").value.trim();
+  const changeReason = document.getElementById("changeReason").value.trim();
+
+  if (!secondReason || !changeReason) {
+    alert("再判断の理由と、変えたこと・変えなかったことを書いてください。");
+    return;
+  }
+
+  const condition = document.getElementById("condition").value;
+  const placeType = document.getElementById("placeType").value;
+  const infoTrust = document.getElementById("infoTrust").value;
+  const guidanceBox = document.getElementById("guidanceBox");
+
+  let guidance = "";
+
+  if (condition === "動けない") {
+    guidance += "無理に移動しないでください。まず頭部を守り、安全な姿勢をとります。近くの人に助けを求め、先生・保護者・119番などにつながる手段を考えます。<br><br>";
+    guidanceBox.className = "result-box emergency";
+  } else if (condition === "友人がけが") {
+    guidance += "まず自分の安全を確保してください。そのうえで友人を一人にせず、近くの大人や周囲の人に助けを求めます。<br><br>";
+    guidanceBox.className = "result-box emergency";
+  } else if (placeType === "ブロック塀の近く") {
+    guidance += "ブロック塀からすぐに離れてください。狭い道を避け、落下物の少ない開けた場所へ移動します。<br><br>";
+    guidanceBox.className = "result-box emergency";
+  } else if (placeType === "川・橋の近く") {
+    guidance += "橋や川沿いから離れます。橋を渡る必要がある場合でも、損傷や混雑がないか慎重に確認してください。<br><br>";
+    guidanceBox.className = "result-box emergency";
+  } else if (placeType === "駅・商店街") {
+    guidance += "建物のガラス、看板、外壁から離れてください。人の流れに流されず、落ち着いて開けた場所を探します。<br><br>";
+    guidanceBox.className = "result-box emergency";
+  } else {
+    guidance += "周囲の安全を確認し、落下物・塀・ガラス・火災・混雑を避けて行動してください。<br><br>";
+    guidanceBox.className = "result-box";
+  }
+
+  if (infoTrust === "信じて行動する") {
+    guidance += "<strong>情報判断について：</strong><br>未確認情報をそのまま信じて行動するのは危険です。発信元、複数情報との一致、公式情報の有無を確認する必要があります。<br><br>";
+  } else if (infoTrust === "一部参考にする") {
+    guidance += "<strong>情報判断について：</strong><br>一部参考にする判断は現実的です。ただし、SNS情報だけで移動先を決めず、目の前の危険と照らし合わせてください。<br><br>";
+  } else if (infoTrust === "まだ信じない") {
+    guidance += "<strong>情報判断について：</strong><br>未確認情報をすぐ信じない姿勢は大切です。ただし、危険の可能性がある情報は完全に無視せず、注意材料として扱いましょう。<br><br>";
+  } else {
+    guidance += "<strong>情報判断について：</strong><br>他の情報と照合しようとする判断は重要です。公式情報、周囲の状況、大人の指示、自分の観察を組み合わせて判断しましょう。<br><br>";
+  }
+
+  guidance += "<strong>最終的な避難誘導：</strong><br>";
+
+  if (secondAction.includes("待機")) {
+    guidance += "その場で待機する場合も、建物・塀・ガラス・車道から離れ、余震に備えてください。周囲が危険になった場合は、すぐに移動判断に切り替えます。";
+  } else if (secondAction.includes("広い場所")) {
+    guidance += "広い場所へ移動する場合は、最短距離だけでなく安全な経路を選んでください。細い道、橋、ブロック塀、混雑場所を避けます。";
+  } else if (secondAction.includes("学校")) {
+    guidance += "学校へ戻る場合は、学校までの道が安全かを優先してください。無理に戻らず、近くの安全な場所で待機する判断も必要です。";
+  } else if (secondAction.includes("自宅")) {
+    guidance += "自宅方面へ進む場合も、自宅や道が安全とは限りません。危険を感じた場合は、帰宅よりも安全確保を優先します。";
+  } else {
+    guidance += "周囲の大人に助けを求める判断は有効です。自分だけで判断できないときは、近くの大人、地域の人、先生、消防・警察等につながる方法を考えます。";
+  }
+
+  guidanceBox.innerHTML = guidance;
+  showOnly("step9");
+}
+
+function saveRecord() {
+  const now = new Date();
+
+  latestRecord = {
+    time: now.toLocaleString(),
+    name: document.getElementById("name").value.trim(),
+    condition: document.getElementById("condition").value,
+    alone: document.getElementById("alone").value,
+    feeling: document.getElementById("feeling").value,
+    pinLat: pinLat,
+    pinLng: pinLng,
+    location: document.getElementById("locationText").value.trim(),
+    placeType: document.getElementById("placeType").value,
+    surrounding: document.getElementById("surrounding").value.trim(),
+    imageName: imageName,
+    imageData: imageData,
+    officialInfo: selectedOfficialInfo,
+    snsPosts: selectedSNSPosts.map(p => "@" + p.name + "：" + p.text).join(" / "),
+    infoTrust: document.getElementById("infoTrust").value,
+    trustReason: document.getElementById("trustReason").value.trim(),
+    firstAction: firstAction,
+    firstReason: document.getElementById("firstReason").value.trim(),
+    firstWorry: document.getElementById("firstWorry").value.trim(),
+    situationChange: selectedSituationChange,
+    secondAction: secondAction,
+    secondReason: document.getElementById("secondReason").value.trim(),
+    changeReason: document.getElementById("changeReason").value.trim()
+  };
+
+  const records = JSON.parse(localStorage.getItem("evacuationRecords") || "[]");
+  records.push(latestRecord);
+  localStorage.setItem("evacuationRecords", JSON.stringify(records));
+
+  showSummary();
+  showOnly("step10");
+  showTeacherPanel();
+}
+
+function showSummary() {
+  const r = latestRecord;
+
+  document.getElementById("summaryBox").innerHTML = `
+    <table>
+      <tr><th>時刻</th><td>${escapeHtml(r.time)}</td></tr>
+      <tr><th>名前</th><td>${escapeHtml(r.name)}</td></tr>
+      <tr><th>状態</th><td>${escapeHtml(r.condition)}</td></tr>
+      <tr><th>状況</th><td>${escapeHtml(r.alone)}</td></tr>
+      <tr><th>気持ち</th><td>${escapeHtml(r.feeling)}</td></tr>
+      <tr><th>地図上の位置</th><td>緯度:${r.pinLat.toFixed(6)} / 経度:${r.pinLng.toFixed(6)}</td></tr>
+      <tr><th>現在地</th><td>${escapeHtml(r.location)}</td></tr>
+      <tr><th>場所の特徴</th><td>${escapeHtml(r.placeType)}</td></tr>
+      <tr><th>画像</th><td>${r.imageData ? `<img src="${r.imageData}" class="preview-img">` : "なし"}</td></tr>
+      <tr><th>入ってきた情報</th><td>${escapeHtml(r.officialInfo)}</td></tr>
+      <tr><th>SNS情報</th><td>${escapeHtml(r.snsPosts)}</td></tr>
+      <tr><th>情報の扱い</th><td>${escapeHtml(r.infoTrust)}</td></tr>
+      <tr><th>1回目の判断</th><td>${escapeHtml(r.firstAction)}</td></tr>
+      <tr><th>状況変化</th><td>${escapeHtml(r.situationChange)}</td></tr>
+      <tr><th>再判断</th><td>${escapeHtml(r.secondAction)}</td></tr>
+    </table>
+  `;
+}
+
+function generatePrompt() {
+  if (!latestRecord) {
+    alert("記録がありません。");
+    return;
+  }
+
+  const r = latestRecord;
+
+  const prompt = `
+あなたは防災教育を専門とする教員です。
+以下は、地震発生時に通学路上にいると想定した避難判断シミュレーションにおける、生徒の回答記録です。
+
+この記録をもとに、生徒の対応を評価してください。
+
+【評価してほしい観点】
+1. 自分の安全を優先できているか
+2. 周囲の危険を具体的に見取れているか
+3. 地図情報を唯一の判断材料にせず、現地状況と組み合わせて判断できているか
+4. SNSや未確認情報をうのみにせず、情報の信頼性を考えられているか
+5. 状況変化に応じて判断を見直せているか
+6. 判断の理由が具体的で妥当か
+7. 実際の災害時に改善すべき点は何か
+
+【出力形式】
+・総合評価：A / B / C / D
+・よかった点
+・気になる点
+・改善アドバイス
+・次に同じ状況になったときの行動例
+・教員コメント案
+
+【生徒の記録】
+
+■ 基本情報
+時刻：${r.time}
+状態：${r.condition}
+一人かどうか：${r.alone}
+気持ち：${r.feeling}
+
+■ 現在地・周囲の状況
+現在地の説明：${r.location}
+緯度：${r.pinLat}
+経度：${r.pinLng}
+場所の特徴：${r.placeType}
+周囲の様子：${r.surrounding}
+画像の有無：${r.imageName ? "あり（" + r.imageName + "）" : "なし"}
+
+■ 入ってきた情報
+学校・地域などからの情報：
+${r.officialInfo}
+
+SNS情報：
+${r.snsPosts}
+
+■ 情報判断
+情報の扱い：${r.infoTrust}
+そう考えた理由：
+${r.trustReason}
+
+■ 1回目の避難判断
+選んだ行動：${r.firstAction}
+判断理由：
+${r.firstReason}
+迷ったこと：
+${r.firstWorry}
+
+■ 状況変化
+${r.situationChange}
+
+■ 再判断
+選んだ行動：${r.secondAction}
+再判断した理由：
+${r.secondReason}
+最初の判断から変えたこと・変えなかったこと：
+${r.changeReason}
+
+以上をもとに、災害時の判断力・情報リテラシー・安全確保の観点から評価してください。
+`.trim();
+
+  document.getElementById("promptOutput").value = prompt;
+}
+
+function copyPrompt() {
+  const textarea = document.getElementById("promptOutput");
+
+  if (!textarea.value.trim()) {
+    alert("先にAI評価用プロンプトを作成してください。");
+    return;
+  }
+
+  textarea.select();
+  textarea.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+
+  alert("プロンプトをコピーしました。");
+}
+
+function openSchoolAI() {
+  window.open("https://edu-ai.jp/sukuten/login.htm", "_blank");
+}
+
+function showTeacherPanel() {
+  const records = JSON.parse(localStorage.getItem("evacuationRecords") || "[]");
+  const panel = document.getElementById("teacherPanel");
+  const tableDiv = document.getElementById("recordTable");
+
+  if (records.length === 0) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  let html = `
+    <table>
+      <tr>
+        <th>時刻</th>
+        <th>名前</th>
+        <th>状態</th>
+        <th>現在地</th>
+        <th>情報判断</th>
+        <th>1回目</th>
+        <th>再判断</th>
+        <th>画像</th>
+      </tr>
+  `;
+
+  records.forEach(r => {
+    html += `
+      <tr>
+        <td>${escapeHtml(r.time)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.condition)}</td>
+        <td>${escapeHtml(r.location)}</td>
+        <td>${escapeHtml(r.infoTrust || "")}</td>
+        <td>${escapeHtml(r.firstAction || "")}</td>
+        <td>${escapeHtml(r.secondAction || "")}</td>
+        <td>${r.imageData ? `<img src="${r.imageData}" class="record-img">` : "なし"}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+  tableDiv.innerHTML = html;
+  panel.classList.remove("hidden");
+}
+
+function downloadCSV() {
+  const records = JSON.parse(localStorage.getItem("evacuationRecords") || "[]");
+
+  if (records.length === 0) {
+    alert("記録がありません。");
+    return;
+  }
+
+  const headers = [
+    "時刻",
+    "名前",
+    "状態",
+    "一人かどうか",
+    "気持ち",
+    "緯度",
+    "経度",
+    "現在地",
+    "場所の特徴",
+    "周囲の様子",
+    "画像名",
+    "入ってきた情報",
+    "SNS情報",
+    "情報の扱い",
+    "情報判断の理由",
+    "1回目の行動",
+    "1回目の理由",
+    "迷ったこと",
+    "状況変化",
+    "再判断",
+    "再判断の理由",
+    "変えたこと・変えなかったこと"
+  ];
+
+  const rows = records.map(r => [
+    r.time,
+    r.name,
+    r.condition,
+    r.alone,
+    r.feeling,
+    r.pinLat,
+    r.pinLng,
+    r.location,
+    r.placeType,
+    r.surrounding,
+    r.imageName,
+    r.officialInfo,
+    r.snsPosts,
+    r.infoTrust,
+    r.trustReason,
+    r.firstAction,
+    r.firstReason,
+    r.firstWorry,
+    r.situationChange,
+    r.secondAction,
+    r.secondReason,
+    r.changeReason
+  ]);
+
+  let csv = "\uFEFF" + headers.join(",") + "\n";
+
+  rows.forEach(row => {
+    csv += row.map(value => `"${String(value ?? "").replace(/"/g, '""')}"`).join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "避難判断記録.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function resetSystem() {
+  firstAction = "";
+  secondAction = "";
+  latestRecord = null;
+  pinLat = null;
+  pinLng = null;
+  imageData = "";
+  imageName = "";
+  selectedOfficialInfo = "";
+  selectedSNSPosts = [];
+  selectedSituationChange = "";
+
+  document.getElementById("name").value = "";
+  document.getElementById("condition").value = "";
+  document.getElementById("alone").value = "";
+  document.getElementById("feeling").value = "";
+  document.getElementById("locationText").value = "";
+  document.getElementById("placeType").value = "";
+  document.getElementById("surrounding").value = "";
+  document.getElementById("imageInput").value = "";
+  document.getElementById("imagePreviewArea").innerHTML = "";
+  document.getElementById("pinText").textContent = "現在地ピン：未設定";
+  document.getElementById("infoTrust").value = "";
+  document.getElementById("trustReason").value = "";
+  document.getElementById("firstReason").value = "";
+  document.getElementById("firstWorry").value = "";
+  document.getElementById("secondReason").value = "";
+  document.getElementById("changeReason").value = "";
+  document.getElementById("promptOutput").value = "";
+
+  if (marker && map) {
+    map.removeLayer(marker);
+    marker = null;
+  }
+
+  const steps = [
+    "step1","step2","step3","step4","step5",
+    "step6","step7","step8","step9","step10"
+  ];
+
+  steps.forEach(step => {
+    document.getElementById(step).classList.add("hidden");
+  });
+
+  document.getElementById("startCard").classList.remove("hidden");
+  document.getElementById("pageTitleCard").classList.add("hidden");
+
+  document.body.className = "";
+  window.scrollTo(0, 0);
+}
+
+function clearRecords() {
+  if (confirm("この端末内の記録を削除しますか？")) {
+    localStorage.removeItem("evacuationRecords");
+    document.getElementById("teacherPanel").classList.add("hidden");
+  }
+}
+
+function randomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function shuffleArray(array) {
+  return [...array].sort(() => Math.random() - 0.5);
+}
+
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+showTeacherPanel();
 </script>
 
 </body>
