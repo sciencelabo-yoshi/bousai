@@ -366,9 +366,29 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
   <div class="step">STEP 1　安否確認</div>
   <h2>あなたの状態を入力してください</h2>
 
-  <label>名前</label>
-  <input type="text" id="name" placeholder="例：3年1組 〇〇">
+  <label>学年</label>
+<select id="grade">
+  <option value="">選択してください</option>
+  <option value="1年">1年</option>
+  <option value="2年">2年</option>
+  <option value="3年">3年</option>
+</select>
 
+<label>組</label>
+<select id="className">
+  <option value="">選択してください</option>
+  <option value="1組">1組</option>
+  <option value="2組">2組</option>
+  <option value="3組">3組</option>
+  <option value="4組">4組</option>
+  <option value="5組">5組</option>
+</select>
+
+<label>出席番号</label>
+<input type="number" id="studentNumber" min="1" max="50" placeholder="例：12">
+
+<label>名前</label>
+<input type="text" id="name" placeholder="例：山田太郎">
   <label>現在の状態</label>
   <select id="condition">
     <option value="">選択してください</option>
@@ -738,13 +758,16 @@ function initMap() {
 }
 
 function goStep2() {
+  const grade = document.getElementById("grade").value;
+  const className = document.getElementById("className").value;
+  const studentNumber = document.getElementById("studentNumber").value.trim();
   const name = document.getElementById("name").value.trim();
   const condition = document.getElementById("condition").value;
   const alone = document.getElementById("alone").value;
   const feeling = document.getElementById("feeling").value;
 
-  if (!name || !condition || !alone || !feeling) {
-    alert("名前・状態・一人かどうか・今の気持ちを入力してください。");
+  if (!grade || !className || !studentNumber || !name || !condition || !alone || !feeling) {
+    alert("学年・組・出席番号・名前・状態・一人かどうか・今の気持ちを入力してください。");
     return;
   }
 
@@ -981,6 +1004,9 @@ function saveRecord() {
 
   latestRecord = {
     time: now.toLocaleString(),
+    grade: document.getElementById("grade").value,
+　　　className: document.getElementById("className").value,
+studentNumber: document.getElementById("studentNumber").value.trim(),
     name: document.getElementById("name").value.trim(),
     condition: document.getElementById("condition").value,
     alone: document.getElementById("alone").value,
@@ -1021,6 +1047,9 @@ function showSummary() {
     <table>
       <tr><th>時刻</th><td>${escapeHtml(r.time)}</td></tr>
       <tr><th>名前</th><td>${escapeHtml(r.name)}</td></tr>
+      <tr><th>学年</th><td>${escapeHtml(r.grade || "")}</td></tr>
+<tr><th>組</th><td>${escapeHtml(r.className || "")}</td></tr>
+<tr><th>出席番号</th><td>${escapeHtml(r.studentNumber || "")}</td></tr>
       <tr><th>状態</th><td>${escapeHtml(r.condition)}</td></tr>
       <tr><th>状況</th><td>${escapeHtml(r.alone)}</td></tr>
       <tr><th>気持ち</th><td>${escapeHtml(r.feeling)}</td></tr>
@@ -1267,7 +1296,9 @@ function resetSystem() {
   selectedOfficialInfo = "";
   selectedSNSPosts = [];
   selectedSituationChange = "";
-
+document.getElementById("grade").value = "";
+document.getElementById("className").value = "";
+document.getElementById("studentNumber").value = "";
   document.getElementById("name").value = "";
   document.getElementById("condition").value = "";
   document.getElementById("alone").value = "";
