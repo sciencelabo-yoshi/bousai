@@ -760,14 +760,24 @@ function initMap() {
 function goStep2() {
   const grade = document.getElementById("grade").value;
   const className = document.getElementById("className").value;
-  const studentNumber = document.getElementById("studentNumber").value.trim();
-  const name = document.getElementById("name").value.trim();
+  const studentNumber = String(document.getElementById("studentNumber").value).trim();
+  const name = String(document.getElementById("name").value).trim();
   const condition = document.getElementById("condition").value;
   const alone = document.getElementById("alone").value;
   const feeling = document.getElementById("feeling").value;
 
-  if (!grade || !className || !studentNumber || !name || !condition || !alone || !feeling) {
-    alert("学年・組・出席番号・名前・状態・一人かどうか・今の気持ちを入力してください。");
+  const missing = [];
+
+  if (!grade) missing.push("学年");
+  if (!className) missing.push("組");
+  if (!studentNumber) missing.push("出席番号");
+  if (!name) missing.push("名前");
+  if (!condition) missing.push("現在の状態");
+  if (!alone) missing.push("一人かどうか");
+  if (!feeling) missing.push("今の気持ち");
+
+  if (missing.length > 0) {
+    alert("未入力の項目があります：\n" + missing.join("、"));
     return;
   }
 
