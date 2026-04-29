@@ -849,7 +849,7 @@ function goStep3() {
 
 function goStep4() {
   selectedOfficialInfo = randomItem(officialInfos);
-  selectedSNSPosts = shuffleArray(snsPosts).slice(0, 3);
+  selectedSNSPosts = shuffleArray(snsPosts).slice(0, 5);
 
   document.getElementById("officialInfoBox").innerHTML =
     "<strong>入ってきた情報：</strong><br>" + escapeHtml(selectedOfficialInfo);
