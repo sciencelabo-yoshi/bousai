@@ -589,7 +589,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
 
   <button onclick="openSchoolAI()">AIスクテン「AIに聞こう」を開く</button>
 
-  <button onclick="downloadCSV()">CSVでダウンロード</button>
+  <button onclick="goToForm()">フォームへ提出する</button>
   <button class="gray" onclick="resetSystem()">最初からやり直す</button>
 </div>
 
@@ -1370,7 +1370,13 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
-
+  
+function goToForm() {
+  window.open(
+    "https://docs.google.com/forms/d/e/1FAIpQLSfYUWSqr1EPKGb4RWAwC8D17r2j1bJE5n_baS4kbDQ2t1IZOw/viewform?usp=publish-editor",
+    "_blank"
+  );
+}
 showTeacherPanel();
 </script>
 
