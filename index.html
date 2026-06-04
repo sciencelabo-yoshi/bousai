@@ -323,7 +323,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
 </header>
 
 <div class="warning">
-  ※これは避難訓練・防災学習用のシステムです。実際の災害時は学校・自治体・警察・消防等の指示を優先してください。
+  ※これは避難訓練(ぼうさいくんれん)・学習用(がくしゅうよう)のシステムです。実際(じっさい)の災害時(さいがい)は学校(がっこう)・自治体(じちたい)・警察(けいさつ)・消防等(しょうぼうとう)の指示(しじ)を優先(ゆうせん)してください。
 </div>
 
 <main>
@@ -337,7 +337,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
 </div>
 
 <div id="startCard" class="card">
-  <h2>現在の想定</h2>
+  <h2>現在(げんざい)の想定(そうてい)</h2>
   <p>
     下校直後、通学路上で強い地震の揺れを感じました。<br>
     あなたは今、自分の安全を確認し、周囲の状況や不確かな情報をもとに、次の行動を判断する必要があります。
@@ -589,7 +589,7 @@ body.page-step10 .page-title-card { border-left-color: #283593; }
 
   <button onclick="openSchoolAI()">AIスクテン「AIに聞こう」を開く</button>
 
-  <button onclick="downloadCSV()">CSVでダウンロード</button>
+  <button onclick="goToForm()">フォームへ提出する</button>
   <button class="gray" onclick="resetSystem()">最初からやり直す</button>
 </div>
 
@@ -618,6 +618,36 @@ let imageName = "";
 let selectedOfficialInfo = "";
 let selectedSNSPosts = [];
 let selectedSituationChange = "";
+
+function speakText(text) {
+  speechSynthesis.cancel();
+  const uttr = new SpeechSynthesisUtterance(text);
+  uttr.lang = "ja-JP";
+  uttr.rate = 1.0;
+  speechSynthesis.speak(uttr);
+}
+
+function stopSpeech() {
+  speechSynthesis.cancel();
+}
+
+function readCurrentPage(id) {
+  let target = document.getElementById(id);
+  if (!target) return;
+
+  let text = "";
+
+  const headings = target.querySelectorAll("h2, .step, p, label");
+  headings.forEach(el => {
+    const t = el.innerText?.trim();
+    if (t) text += t + "。";
+  });
+
+  if (text) {
+    setTimeout(() => speakText(text), 500);
+  }
+}
+
 
 const officialInfos = [
   "学校からの連絡はまだ届いていません。地域の防災無線では『安全な場所で待機』と呼びかけていますが、詳しい場所の指定はありません。",
@@ -712,6 +742,8 @@ function showOnly(id) {
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 
+  readCurrentPage(id);
+
   if (id === "step2") {
     setTimeout(function() {
       initMap();
@@ -776,10 +808,7 @@ function goStep2() {
   if (!alone) missing.push("一人かどうか");
   if (!feeling) missing.push("今の気持ち");
 
-  if (missing.length > 0) {
-    alert("未入力の項目があります：\n" + missing.join("、"));
-    return;
-  }
+  
 
   showOnly("step2");
 }
@@ -813,15 +842,9 @@ function goStep3() {
   const placeType = document.getElementById("placeType").value;
   const surrounding = document.getElementById("surrounding").value.trim();
 
-  if (pinLat === null || pinLng === null) {
-    alert("地図上で現在地ピンを立ててください。");
-    return;
-  }
+  
 
-  if (!locationText || !placeType || !surrounding) {
-    alert("現在地の説明・近くにあるもの・周囲の様子を入力してください。");
-    return;
-  }
+  
 
   const condition = document.getElementById("condition").value;
   const situationBox = document.getElementById("situationBox");
@@ -830,7 +853,7 @@ function goStep3() {
 
   message += "あなたは地図上に現在地を指定しました。<br>";
   message += "現在地の説明：" + escapeHtml(locationText) + "<br>";
-  message += "緯度：" + pinLat.toFixed(6) + "、経度：" + pinLng.toFixed(6) + "<br><br>";
+  message += (pinLat==null||pinLng==null) ? "地図ピン未設定<br><br>" : "緯度：" + pinLat.toFixed(6) + "、経度：" + pinLng.toFixed(6) + "<br><br>";
 
   message += "<strong>地図情報について：</strong><br>";
   message += "地図は現在地を考えるための参考です。実際の安全性を保証するものではありません。<br><br>";
@@ -906,10 +929,7 @@ function goStep5() {
   const infoTrust = document.getElementById("infoTrust").value;
   const trustReason = document.getElementById("trustReason").value.trim();
 
-  if (!infoTrust || !trustReason) {
-    alert("情報の扱い方と理由を入力してください。");
-    return;
-  }
+  
 
   showOnly("step5");
 }
@@ -925,10 +945,7 @@ function goStep7() {
   const firstReason = document.getElementById("firstReason").value.trim();
   const firstWorry = document.getElementById("firstWorry").value.trim();
 
-  if (!firstReason || !firstWorry) {
-    alert("判断理由と迷ったことを入力してください。");
-    return;
-  }
+  
 
   selectedSituationChange = randomItem(situationChanges);
 
@@ -949,10 +966,7 @@ function showGuidance() {
   const secondReason = document.getElementById("secondReason").value.trim();
   const changeReason = document.getElementById("changeReason").value.trim();
 
-  if (!secondReason || !changeReason) {
-    alert("再判断の理由と、変えたこと・変えなかったことを書いてください。");
-    return;
-  }
+  
 
   const condition = document.getElementById("condition").value;
   const placeType = document.getElementById("placeType").value;
@@ -1063,7 +1077,7 @@ function showSummary() {
       <tr><th>状態</th><td>${escapeHtml(r.condition)}</td></tr>
       <tr><th>状況</th><td>${escapeHtml(r.alone)}</td></tr>
       <tr><th>気持ち</th><td>${escapeHtml(r.feeling)}</td></tr>
-      <tr><th>地図上の位置</th><td>緯度:${r.pinLat.toFixed(6)} / 経度:${r.pinLng.toFixed(6)}</td></tr>
+      <tr><th>地図上の位置</th><td>${(r.pinLat==null||r.pinLng==null) ? "未入力" : `緯度:${r.pinLat.toFixed(6)} / 経度:${r.pinLng.toFixed(6)}`}</td></tr>
       <tr><th>現在地</th><td>${escapeHtml(r.location)}</td></tr>
       <tr><th>場所の特徴</th><td>${escapeHtml(r.placeType)}</td></tr>
       <tr><th>画像</th><td>${r.imageData ? `<img src="${r.imageData}" class="preview-img">` : "なし"}</td></tr>
@@ -1369,6 +1383,13 @@ function escapeHtml(text) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function goToForm() {
+  window.open(
+    "https://docs.google.com/forms/d/e/1FAIpQLSfYUWSqr1EPKGb4RWAwC8D17r2j1bJE5n_baS4kbDQ2t1IZOw/viewform?usp=publish-editor",
+    "_blank"
+  );
 }
 
 showTeacherPanel();
